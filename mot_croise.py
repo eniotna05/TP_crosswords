@@ -79,11 +79,88 @@ class CrossWord:
 
     def get_segments(self):
         """
-        Cette fonction transforme self.words en un tableau de segments [0,0...0] de la taille des mots que l'on cherche
-        Elle retourne aussi là où les mots se croisent (quels indices respectifs)
+        Cette fonction transforme self.grid_array en un tableau de segments [0,0...0] de la taille des mots que l'on cherche
+        Elle retourne aussi là où les mots se croisent (quels indices respectifs)"""
 
-        """
-        segments=[]
+        id_segment = 0
+
+        horizontal_segments = {}
+        for k in range(self.grid_height):
+            mot_en_cours = False
+            longeur_du_mot = 0
+            debut = None
+            for i in range(self.grid_width):
+                if self.grid_array[k][i] == 1 and mot_en_cours == False:
+                    mot_en_cours = True
+                    longeur_du_mot = 1
+                    debut = (k,i)
+                elif self.grid_array[k][i] == 1 and mot_en_cours == True:
+                    longeur_du_mot += 1
+                elif self.grid_array[k][i] == 0 and mot_en_cours == True and longeur_du_mot > 1:
+                    print(longeur_du_mot)
+                    mot_en_cours = False
+                    id_segment += 1
+                    horizontal_segments[id_segment] = [longeur_du_mot, debut, (k,i-1)]
+                elif self.grid_array[k][i] == 0 and mot_en_cours == True and longeur_du_mot <= 1:
+                    mot_en_cours = False
+
+        vertical_segments = {}
+        for i in range(self.grid_width):
+            mot_en_cours = False
+            longeur_du_mot = 0
+            debut = None
+            for k in range(self.grid_height):
+                if self.grid_array[k][i] == 1 and mot_en_cours == False:
+                    mot_en_cours = True
+                    longeur_du_mot = 1
+                    debut = (k,i)
+                elif self.grid_array[k][i] == 1 and mot_en_cours == True:
+                    longeur_du_mot += 1
+                elif self.grid_array[k][i] == 0 and mot_en_cours == True and longeur_du_mot > 1:
+                    mot_en_cours = False
+                    id_segment += 1
+                    vertical_segments[id_segment] = [longeur_du_mot, debut, (k-1,i)]
+                elif self.grid_array[k][i] == 0 and mot_en_cours == True and longeur_du_mot <= 1:
+                    mot_en_cours = False
+
+
+        print(horizontal_segments)
+        print("")
+        print(vertical_segments)
+        print("")
+
+        croisements =[]
+
+        for k in range(self.grid_height):
+            for i in range(self.grid_width):
+                if self.grid_array[k,i] == 1:
+                    horizontal = None
+                    vertical = None
+                    for id, segment in horizontal_segments.items():
+                        if k == segment[1][0] and i>= segment[1][1] and i<= segment[2][1]:
+                            horizontal = [id, i]
+                    if horizontal is not None:
+                        for id, segment in vertical_segments.items():
+                            if i == segment[1][1] and k >= segment[1][0] and k <= segment[2][0]:
+                                vertical = [id, k]
+                        if vertical is not None:
+                            croisements.append(horizontal + vertical)
+
+        print(croisements)
+        horizontal_segments.update(vertical_segments)
+        segments = horizontal_segments
+
+        #segment is a dictionnary with segment_id in key and a 3 values list in value:
+            # - segment length
+            # - segment start (line, column)
+            # - segment end (line, column)
+
+        # croisements is a list of 4 values lists:
+            # - horizontal segment id
+            # - column number
+            # - vertical segment id
+            # - line number
+
 
         return segments, croisements
 
@@ -91,3 +168,4 @@ if __name__ == '__main__':
     args = argparser.parse_args()
     solver = CrossWord(args)
     solver.parse()
+    solver.get_segments()
