@@ -63,13 +63,14 @@ class CrossWord:
             var[s]=set([w for w in self.word_list if len(w)==size_seg])
 
         # Contraintes binaires: pour forcer les mots à s'intersecter correctement selon les croisements que l'on impose
-        print(self.segments)
-        print(self.croisements)
+
         for c in self.croisements:
             constraint_bin=self.croisements[c]
-            BIN = {(i,j) for i in self.word_list for j in self.word_list if i[constraint_bin[0]]==j[constraint_bin[1]]}
+            BIN = {(i,j) for i in self.word_list for j in self.word_list if len(i)>max(constraint_bin[0],constraint_bin[1]) and len(j)>max(constraint_bin[0],constraint_bin[1]) and i[constraint_bin[0]]!=j[constraint_bin[1]]}
 
-        #P.addConstraint(1,2,BIN)
+        for c in self.croisements:
+            P.addConstraint(c[0],c[1],BIN)
+
         NEQ = {(i,j) for i in self.word_list for j in self.word_list if i!=j}
         for w in self.segments:
             for z in self.segments:
@@ -78,19 +79,6 @@ class CrossWord:
         return P.solve()
 
     def get_segments(self):
-        """
-    segment is a dictionnary with segment_id in key and a 3 values list in value:
-                # - segment length
-                # - segment start (line, column)
-                # - segment end (line, column)
-
-    croisements is a list of 4 values lists:
-                # - horizontal segment id
-                # - column number
-                # - vertical segment id
-                # - line number
-
-        """
         id_segment = 0
 
         horizontal_segments = {}
