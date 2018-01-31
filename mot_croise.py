@@ -27,8 +27,6 @@ class CrossWord:
         self.grid_array,self.word_list,self.grid_width,self.grid_height  = self.parse()
         self.segments, self.croisements=self.get_segments()
 
-
-
     def parse(self):
 
         with open(self.dic_path, "r") as dict_file:
@@ -54,21 +52,19 @@ class CrossWord:
         # On veut une var du type var = {1: un_mot, 2: un_autre_mot}
         var = {seg:set(self.word_list) for seg in self.segments}
 
-        # Creation du probleme
-        P = constraint_programming(var)
-
         #Contrainte uniaire: impose la longueur des segments= la longueur d'un mot qui existe (restriction de l'espace)
         for s in self.segments:
             size_seg = self.segments[s][0]
             var[s]=set([w for w in self.word_list if len(w)==size_seg])
 
+        # Creation du probleme
+        P = constraint_programming(var)
+
         # Contraintes binaires: pour forcer les mots à s'intersecter correctement selon les croisements que l'on impose
 
         for c in self.croisements:
-            constraint_bin=self.croisements[c]
-            BIN = {(i,j) for i in self.word_list for j in self.word_list if len(i)>max(constraint_bin[0],constraint_bin[1]) and len(j)>max(constraint_bin[0],constraint_bin[1]) and i[constraint_bin[0]]!=j[constraint_bin[1]]}
-
-        for c in self.croisements:
+            print(c)
+            BIN = {(i,j) for i in self.word_list for j in self.word_list if len(i)>max(self.croisements[c][0],self.croisements[c][1]) and len(j)>max(self.croisements[c][0],self.croisements[c][1]) and i[self.croisements[c][0]]==j[self.croisements[c][1]]}
             P.addConstraint(c[0],c[1],BIN)
 
         NEQ = {(i,j) for i in self.word_list for j in self.word_list if i!=j}
