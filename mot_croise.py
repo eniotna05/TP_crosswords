@@ -61,10 +61,15 @@ class CrossWord:
         P = constraint_programming(var)
 
         # Contraintes binaires: pour forcer les mots à s'intersecter correctement selon les croisements que l'on impose
-
+        count=0
         for c in self.croisements:
-            print(c)
-            BIN = {(i,j) for i in self.word_list for j in self.word_list if len(i)>max(self.croisements[c][0],self.croisements[c][1]) and len(j)>max(self.croisements[c][0],self.croisements[c][1]) and i[self.croisements[c][0]]==j[self.croisements[c][1]]}
+            count=count+1
+            print(str(count)+ " / "+str(len(self.croisements)))
+            word_list_1 = [p for p in self.word_list if p in var[c[0]] and len(p)>self.croisements[c][0]]
+            word_list_2 = [p for p in self.word_list if p in var[c[1]] and len(p)>self.croisements[c][1]]
+
+            BIN = {(i,j) for i in word_list_1 for j in word_list_2 if i[self.croisements[c][0]]==j[self.croisements[c][1]]}
+            # C0 et c1 ont la propriété d'être identiques en les index relatifs à leur chaine de caractère de croisement
             P.addConstraint(c[0],c[1],BIN)
 
         NEQ = {(i,j) for i in self.word_list for j in self.word_list if i!=j}
