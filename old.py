@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 
+
 import time
 import argparse
 import numpy as np
-from constraint_programming import constraint_programming
-# python mot_croise.py -g crossword1.txt -d words1.txt
+
+# python old.py -g crossword1.txt -d words1.txt
 
 argparser = argparse.ArgumentParser(
     description='Solves crosswords')
@@ -24,9 +25,12 @@ class CrossWord:
     def __init__(self,args):
         self.dic_path = args.dictionnary
         self.grid_path = args.grid
-        self.grid_array,self.word_list,self.grid_width,self.grid_height  = self.parse()
-        self.segments, self.croisements=self.get_segments()
 
+        self.grid_width = None
+        self.grid_height = None
+        self.grid_array = None
+
+        self.word_list=None
 
 
     def parse(self):
@@ -35,6 +39,8 @@ class CrossWord:
             word_list = dict_file.readlines()
             word_list = [word[:-1] for word in word_list]
             self.word_list = word_list
+
+        print(word_list)
 
         with open(self.grid_path, "r") as grid_file:
             grid_lines = grid_file.readlines()
@@ -47,50 +53,38 @@ class CrossWord:
                 if grid_lines[line][column] == ".":
                     self.grid_array[line][column] = 1
 
-        return self.grid_array,self.word_list,self.grid_width,self.grid_height
+        print(self.grid_array)
 
     def solve(self):
 
-        # On veut une var du type var = {1: un_mot, 2: un_autre_mot}
-        var = {seg:set(self.word_list) for seg in self.segments}
+        segments,croisements=get_segments()
+        letters=["a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z"]
+        words=self.word_list
 
-        # Creation du probleme
+        # On veut une var du type var = {1: un_mot, 2: un_autre_mot}
+        var = {seg:set(words) for seg in segments}
+
+        # Création du probleme
         P = constraint_programming(var)
 
         #Contrainte uniaire: impose la longueur des segments= la longueur d'un mot qui existe (restriction de l'espace)
-        for s in self.segments:
-            size_seg = self.segments[s][0]
-            var[s]=set([w for w in self.word_list if len(w)==size_seg])
+        for s in segments:
+            var[str(s)]=set([w for w in words if len(w)==len(s)])
 
         # Contraintes binaires: pour forcer les mots à s'intersecter correctement selon les croisements que l'on impose
-        print(self.segments)
-        print(self.croisements)
-        for c in self.croisements:
-            constraint_bin=self.croisements[c]
-            BIN = {(i,j) for i in self.word_list for j in self.word_list if i[constraint_bin[0]]==j[constraint_bin[1]]}
+        BIN = {(i,j) for i in segments for j in segments if i==j}
 
-        #P.addConstraint(1,2,BIN)
-        NEQ = {(i,j) for i in self.word_list for j in self.word_list if i!=j}
-        for w in self.segments:
-            for z in self.segments:
-                if w!=z:
-                    P.addConstraint(w,z,NEQ)
+        # Imaginons par exemple que seg1[i]=seg2[j] (les deux mots se croisent, en l'indice i pour seg1 et j pour seg2)
+        # Il suffit alors de boucler sur les segments en ajoutant les contraintes ainsi de suite puis de faire:
+        P.addConstraint(seg1[i],seg2[j],BIN)
+
         return P.solve()
 
     def get_segments(self):
         """
-    segment is a dictionnary with segment_id in key and a 3 values list in value:
-                # - segment length
-                # - segment start (line, column)
-                # - segment end (line, column)
+        Cette fonction transforme self.grid_array en un tableau de segments [0,0...0] de la taille des mots que l'on cherche
+        Elle retourne aussi là où les mots se croisent (quels indices respectifs)"""
 
-    croisements is a list of 4 values lists:
-                # - horizontal segment id
-                # - column number
-                # - vertical segment id
-                # - line number
-
-        """
         id_segment = 0
 
         horizontal_segments = {}
@@ -106,6 +100,7 @@ class CrossWord:
                 elif self.grid_array[k][i] == 1 and mot_en_cours == True:
                     longeur_du_mot += 1
                 elif self.grid_array[k][i] == 0 and mot_en_cours == True and longeur_du_mot > 1:
+                    print(longeur_du_mot)
                     mot_en_cours = False
                     id_segment += 1
                     horizontal_segments[id_segment] = [longeur_du_mot, debut, (k,i-1)]
@@ -131,6 +126,12 @@ class CrossWord:
                 elif self.grid_array[k][i] == 0 and mot_en_cours == True and longeur_du_mot <= 1:
                     mot_en_cours = False
 
+
+        print(horizontal_segments)
+        print("")
+        print(vertical_segments)
+        print("")
+
         croisements =[]
 
         for k in range(self.grid_height):
@@ -147,26 +148,27 @@ class CrossWord:
                                 vertical = [id, k]
                         if vertical is not None:
                             croisements.append(horizontal + vertical)
-        croisements_up={}
+
+        print(croisements)
         horizontal_segments.update(vertical_segments)
         segments = horizontal_segments
 
-        for elem in croisements:
-            croisements_up[(elem[0],elem[2])]=[elem[1],elem[3]]
-        for elem in croisements_up:
-            pair = croisements_up[elem]
-            # Traitement du cas horizontal
-            col_croise = pair[0]
-            seg_horiz_length = col_croise-segments[elem[0]][1][1]
-            croisements_up[elem][0]=seg_horiz_length
-            # Traitement du cas vertical
-            vertic_croise=pair[1]
-            seg_vertic_length = vertic_croise-segments[elem[1]][1][0]
-            croisements_up[elem][1]=seg_vertic_length
+        #segment is a dictionnary with segment_id in key and a 3 values list in value:
+            # - segment length
+            # - segment start (line, column)
+            # - segment end (line, column)
 
-        return segments, croisements_up
+        # croisements is a list of 4 values lists:
+            # - horizontal segment id
+            # - column number
+            # - vertical segment id
+            # - line number
+
+
+        return segments, croisements
 
 if __name__ == '__main__':
     args = argparser.parse_args()
     solver = CrossWord(args)
-    print(solver.solve())
+    solver.parse()
+solver.get_segments()

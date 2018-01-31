@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 # 2018 - Ecole Centrale Supélec - c. dürr
 
@@ -150,4 +151,3 @@ class constraint_programming:
             if (u, v) in relation:
                     return True
         return False
-
