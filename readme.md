@@ -32,3 +32,11 @@ Cette solution permet de résoudre les problèmes simples comme la grille 1.
 ## <a name="init"></a>2. Seconde solution
 
 La seconde solution que nous livrons dans ce repo repose sur une idée simple: il suffit de considérer les cases d'intersection de segments comme eux mêmes des segments et imposer que ces dernières soient des lettres uniques, communes aux mots verticaux et horizontaux.
+
+**Solution**: 0.0906 secondes
+
+Les valeurs de segments que nous trouvons:
+
+1: 'analyzable', 2: 'ammonia', 3: 'arena', 4: 'lots', 5: 'playmate', 6: 'yellow', 7: 'studio', 8: 'amending', 9: 'lace', 10: 'drama', 11: 'unaware', 12: '
+identified', 13: 'Talleyrand', 14: 'admit', 15: 'leeward', 16: 'aunt', 17: 'Woodlawn', 18: 'yearly', 19: 'annuli', 20: 'analysts', 21: 'taxi', 22: 'leeward
+', 23: 'award', 24: 'anemometer'

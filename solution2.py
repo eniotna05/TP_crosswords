@@ -67,17 +67,16 @@ class CrossWord:
         # Creation du probleme
         P = constraint_programming(var)
         count=0
-        NEQ = {(i,j) for i in self.wl_alph for j in self.wl_alph if i!=j}
+        #NEQ = {(i,j) for i in self.wl_alph for j in self.wl_alph if i!=j}
 
-        for w in self.segments:
-            for z in self.segments:
-                if w!=z:
-                    P.addConstraint(w,z,NEQ)
+        #for w in self.segments:
+        #    for z in self.segments:
+        #        if w!=z:
+        #            P.addConstraint(w,z,NEQ)
         # Contraintes binaires: pour forcer les mots à s'intersecter correctement selon les croisements que l'on impose
 
         for c in self.segs_bis:
             count=count+1
-            print(self.segs_bis)
             print(str(count)+ " / "+str(len(self.croisements)))
             BIN = {(i,j) for i in self.alphabet for j in self.word_list if len(j)>self.segs_bis[c][3] and i==j[self.segs_bis[c][3]]}
             BIN2 = {(i,j) for i in self.alphabet for j in self.word_list if len(j)>self.segs_bis[c][4] and i==j[self.segs_bis[c][4]]}
