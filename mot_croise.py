@@ -26,7 +26,7 @@ class CrossWord:
         self.dic_path = args.dictionnary
         self.grid_path = args.grid
         self.grid_array,self.word_list,self.grid_width,self.grid_height  = self.parse()
-        self.segments, self.croisements=self.get_segments()
+        self.segments, self.croisements,self.segments_to_add,self.croisements_to_add=self.get_segments()
 
     def parse(self):
 
@@ -34,10 +34,7 @@ class CrossWord:
             word_list = dict_file.readlines()
             word_list = [word[:-1] for word in word_list]
             self.word_list = word_list
-            alphabet=['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z']
-            for l in alphabet:
-                self.word_list.append(l)
-
+            self.alphabet=['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z']
 
         with open(self.grid_path, "r") as grid_file:
             grid_lines = grid_file.readlines()
@@ -70,21 +67,28 @@ class CrossWord:
         #        if w!=z:
         #            P.addConstraint(w,z,NEQ)
         # Contraintes binaires: pour forcer les mots à s'intersecter correctement selon les croisements que l'on impose
-        for c in self.croisements:
+        for c in self.croisements_to_add:
             count=count+1
-            print(str(count)+ " / "+str(len(self.croisements)))
+            print(str(count)+ " / "+str(len(self.croisements_to_add)))
 
             # une contrainte qui identifie une intersection segment_letter à un mot (une lettre)
 
-            word_list_1 = [p for p in self.word_list if p in var[c[0]] and len(p)>self.croisements[c][0]]
-            word_list_2 = [p for p in self.word_list if p in var[c[1]] and len(p)>self.croisements[c][1]]
+            #word_list_1 = [p for p in self.word_list if p in var[c[0]] and len(p)>self.croisements[c][0]]
+            #word_list_2 = [p for p in self.word_list if p in var[c[1]] and len(p)>self.croisements[c][1]]
 
-            BIN = {(i,j) for i in word_list_1 for j in word_list_2 if i[self.croisements[c][0]]==j[self.croisements[c][1]]}
-            BIN = {(i,j) for i in word_list_1 for j in word_list_2 if i[self.croisements[c][0]]==j[self.croisements[c][1]]}
+            #BIN = {(i,j) for i in word_list_1 for j in word_list_2 if i[self.croisements[c][0]]==j[self.croisements[c][1]]}
+            #BIN = {(i,j) for i in word_list_1 for j in word_list_2 if i[self.croisements[c][0]]==j[self.croisements[c][1]]}
             # C0 et c1 ont la propriété d'être identiques en les index relatifs à leur chaine de caractère de croisement
-            P.addConstraint(c[0],c[1],BIN)
+            #P.addConstraint(c[0],c[1],BIN)
 
-        return P.solve()
+            # l'idée est de mettre une contrainte sur croisements_to_add entre un mot et une lettre
+            BIN = {(i,j) for i in self.word_list for j in self.alphabet if len(i)>self.croisements_to_add[c][0] and len(j)>self.croisements_to_add[c][0] and i[self.croisements_to_add[c][0]]==j[self.croisements_to_add[c][1]] }
+        start=time.time()
+        solution= P.solve()
+        end=time.time()
+        print(end-start)
+
+        return solution
 
 
 
@@ -174,16 +178,18 @@ class CrossWord:
             segments_to_add[i+curr_len_seg]=[]
             segments_to_add[i+curr_len_seg]=[1,c[0],c[1],croisements_up[c][0],croisements_up[c][1]]
 
+        croisements_up_to_add={}
         for new_elem in segments_to_add:
-            croisements_up[segments_to_add[new_elem][1],new_elem]=[segments_to_add[new_elem][4],0]
-            croisements_up[segments_to_add[new_elem][0],new_elem]=[segments_to_add[new_elem][3],0]
+            croisements_up_to_add[segments_to_add[new_elem][1],new_elem]=[segments_to_add[new_elem][4],0]
+            croisements_up_to_add[segments_to_add[new_elem][0],new_elem]=[segments_to_add[new_elem][3],0]
 
-        for s in segments_to_add:
-            segments[s]=segments_to_add[s]
+        #for s in segments_to_add:
+        #    segments[s]=segments_to_add[s]
 
         # On doit ajouter aux croisements les "intersections" d'un segment d'une lettre et des segments normaux
         # de la forme (numero intersection, numero segment, position dans l'inter, 0)
-        return segments, croisements_up
+
+        return segments, croisements_up,segments_to_add,croisements_up_to_add
 
 
 if __name__ == '__main__':
