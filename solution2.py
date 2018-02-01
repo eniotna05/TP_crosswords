@@ -26,7 +26,7 @@ class CrossWord:
         self.dic_path = args.dictionnary
         self.grid_path = args.grid
         self.grid_array,self.word_list,self.grid_width,self.grid_height  = self.parse()
-        self.segments, self.croisements,self.croisements_bis=self.get_segments()
+        self.segments, self.croisements,self.segs_bis=self.get_segments()
 
     def parse(self):
 
@@ -36,6 +36,10 @@ class CrossWord:
             self.word_list = word_list
             self.alphabet=['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z']
             self.wl_alph=[]
+            for l in self.alphabet:
+                self.wl_alph.append(l)
+            for t in self.word_list:
+                self.wl_alph.append(t)
 
 
         with open(self.grid_path, "r") as grid_file:
@@ -55,40 +59,34 @@ class CrossWord:
 
         # On veut une var du type var = {1: un_mot, 2: un_autre_mot}
         var = {seg:set(self.wl_alph) for seg in self.segments}
-
-
+        print(self.segments)
         #Contrainte uniaire: impose la longueur des segments= la longueur d'un mot qui existe (restriction de l'espace)
         for s in self.segments:
             size_seg = self.segments[s][0]
             var[s]=set([w for w in self.wl_alph if len(w)==size_seg])
         # Creation du probleme
-        print(var)
         P = constraint_programming(var)
         count=0
-        NEQ = {(i,j) for i in self.word_list for j in self.word_list if i!=j}
+        NEQ = {(i,j) for i in self.wl_alph for j in self.wl_alph if i!=j}
+
         for w in self.segments:
             for z in self.segments:
                 if w!=z:
                     P.addConstraint(w,z,NEQ)
         # Contraintes binaires: pour forcer les mots à s'intersecter correctement selon les croisements que l'on impose
-        for c in self.croisements:
+
+        for c in self.segs_bis:
             count=count+1
+            print(self.segs_bis)
             print(str(count)+ " / "+str(len(self.croisements)))
+            BIN = {(i,j) for i in self.alphabet for j in self.word_list if len(j)>self.segs_bis[c][3] and i==j[self.segs_bis[c][3]]}
+            BIN2 = {(i,j) for i in self.alphabet for j in self.word_list if len(j)>self.segs_bis[c][4] and i==j[self.segs_bis[c][4]]}
 
             # SOLUTION 1: (très gourmande en temps)
-            word_list_1 = [p for p in self.wl_alph if p in var[c[0]] and len(p)>self.croisements[c][0]]
-            word_list_2 = [p for p in self.wl_alph if p in var[c[1]] and len(p)>self.croisements[c][1]]
-
-            BIN = {(i,j) for i in word_list_1 for j in word_list_2 if i[self.croisements[c][0]]==j[self.croisements[c][1]]}
-            BIN = {(i,j) for i in word_list_1 for j in word_list_2 if i[self.croisements[c][0]]==j[self.croisements[c][1]]}
             # C0 et c1 ont la propriété d'être identiques en les index relatifs à leur chaine de caractère de croisement
-            P.addConstraint(c[0],c[1],BIN)
-            P.addConstraint(c[0],c[1],BIN)
-
-
-            count=0
-            print(self.croisements_bis)
-
+            print(c)
+            P.addConstraint(c,self.segs_bis[c][1],BIN)
+            P.addConstraint(c,self.segs_bis[c][2],BIN2)
 
         start=time.time()
         solution= P.solve()
@@ -185,10 +183,12 @@ class CrossWord:
             segments_to_add[i+curr_len_seg]=[]
             segments_to_add[i+curr_len_seg]=[1,c[0],c[1],croisements_up[c][0],croisements_up[c][1]]
 
-        croisements_up_to_add={}
-        for new_elem in segments_to_add:
-            croisements_up_to_add[segments_to_add[new_elem][1],new_elem]=[segments_to_add[new_elem][4],0]
-            croisements_up_to_add[segments_to_add[new_elem][0],new_elem]=[segments_to_add[new_elem][3],0]
+        print(segments)
+        print(segments_to_add)
+        #croisements_up_to_add={}
+        #for new_elem in segments_to_add:
+        #    croisements_up_to_add[segments_to_add[new_elem][1],new_elem]=[segments_to_add[new_elem][4],0]
+        #    croisements_up_to_add[segments_to_add[new_elem][0],new_elem]=[segments_to_add[new_elem][3],0]
 
         for s in segments_to_add:
             segments[s]=segments_to_add[s]
@@ -196,7 +196,7 @@ class CrossWord:
         # On doit ajouter aux croisements les "intersections" d'un segment d'une lettre et des segments normaux
         # de la forme (numero intersection, numero segment, position dans l'inter, 0)
 
-        return segments, croisements_up,croisements_up_to_add
+        return segments, croisements_up,segments_to_add
 
 
 if __name__ == '__main__':
