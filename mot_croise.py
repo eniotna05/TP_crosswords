@@ -5,6 +5,7 @@ import argparse
 import numpy as np
 from constraint_programming import constraint_programming
 # python mot_croise.py -g crossword1.txt -d words1.txt
+# ajouter tqdm
 
 argparser = argparse.ArgumentParser(
     description='Solves crosswords')
@@ -33,6 +34,10 @@ class CrossWord:
             word_list = dict_file.readlines()
             word_list = [word[:-1] for word in word_list]
             self.word_list = word_list
+            alphabet=['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z']
+            for l in alphabet:
+                self.word_list.append(l)
+
 
         with open(self.grid_path, "r") as grid_file:
             grid_lines = grid_file.readlines()
@@ -56,28 +61,32 @@ class CrossWord:
         for s in self.segments:
             size_seg = self.segments[s][0]
             var[s]=set([w for w in self.word_list if len(w)==size_seg])
-
         # Creation du probleme
         P = constraint_programming(var)
-
-        # Contraintes binaires: pour forcer les mots à s'intersecter correctement selon les croisements que l'on impose
         count=0
+        #NEQ = {(i,j) for i in self.word_list for j in self.word_list if i!=j}
+        #for w in self.segments:
+        #    for z in self.segments:
+        #        if w!=z:
+        #            P.addConstraint(w,z,NEQ)
+        # Contraintes binaires: pour forcer les mots à s'intersecter correctement selon les croisements que l'on impose
         for c in self.croisements:
             count=count+1
             print(str(count)+ " / "+str(len(self.croisements)))
+
+            # une contrainte qui identifie une intersection segment_letter à un mot (une lettre)
+
             word_list_1 = [p for p in self.word_list if p in var[c[0]] and len(p)>self.croisements[c][0]]
             word_list_2 = [p for p in self.word_list if p in var[c[1]] and len(p)>self.croisements[c][1]]
 
             BIN = {(i,j) for i in word_list_1 for j in word_list_2 if i[self.croisements[c][0]]==j[self.croisements[c][1]]}
+            BIN = {(i,j) for i in word_list_1 for j in word_list_2 if i[self.croisements[c][0]]==j[self.croisements[c][1]]}
             # C0 et c1 ont la propriété d'être identiques en les index relatifs à leur chaine de caractère de croisement
             P.addConstraint(c[0],c[1],BIN)
 
-        NEQ = {(i,j) for i in self.word_list for j in self.word_list if i!=j}
-        for w in self.segments:
-            for z in self.segments:
-                if w!=z:
-                    P.addConstraint(w,z,NEQ)
         return P.solve()
+
+
 
     def get_segments(self):
         id_segment = 0
@@ -143,6 +152,7 @@ class CrossWord:
         for elem in croisements:
             croisements_up[(elem[0],elem[2])]=[elem[1],elem[3]]
         for elem in croisements_up:
+
             pair = croisements_up[elem]
             # Traitement du cas horizontal
             col_croise = pair[0]
@@ -153,7 +163,28 @@ class CrossWord:
             seg_vertic_length = vertic_croise-segments[elem[1]][1][0]
             croisements_up[elem][1]=seg_vertic_length
 
+        # On doit rajouter des segments d'une lettre pour les intersections et mettre des contraintes dessus sur l'alphabet
+        i=0
+        segments_to_add={}
+        curr_len_seg=len(segments)
+
+        for c in croisements_up:
+            i=i+1
+
+            segments_to_add[i+curr_len_seg]=[]
+            segments_to_add[i+curr_len_seg]=[1,c[0],c[1],croisements_up[c][0],croisements_up[c][1]]
+
+        for new_elem in segments_to_add:
+            croisements_up[segments_to_add[new_elem][1],new_elem]=[segments_to_add[new_elem][4],0]
+            croisements_up[segments_to_add[new_elem][0],new_elem]=[segments_to_add[new_elem][3],0]
+
+        for s in segments_to_add:
+            segments[s]=segments_to_add[s]
+
+        # On doit ajouter aux croisements les "intersections" d'un segment d'une lettre et des segments normaux
+        # de la forme (numero intersection, numero segment, position dans l'inter, 0)
         return segments, croisements_up
+
 
 if __name__ == '__main__':
     args = argparser.parse_args()
