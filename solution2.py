@@ -36,10 +36,7 @@ class CrossWord:
             self.word_list = word_list
             self.alphabet=['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z']
             self.wl_alph=[]
-            for el in self.alphabet:
-                self.wl_alph.append(el)
-            for el in self.word_list:
-                self.wl_alph.append(el)
+
 
         with open(self.grid_path, "r") as grid_file:
             grid_lines = grid_file.readlines()
@@ -86,18 +83,12 @@ class CrossWord:
             BIN = {(i,j) for i in word_list_1 for j in word_list_2 if i[self.croisements[c][0]]==j[self.croisements[c][1]]}
             # C0 et c1 ont la propriété d'être identiques en les index relatifs à leur chaine de caractère de croisement
             P.addConstraint(c[0],c[1],BIN)
+            P.addConstraint(c[0],c[1],BIN)
+
 
             count=0
             print(self.croisements_bis)
-        for c in self.croisements_bis:
-            print(c)
-            print(self.croisements_bis[c])
-            # SOLUTION 2: l'idée est de mettre une contrainte sur croisements_to_add entre un mot et une lettre
-            count=count+1
-            print(str(count)+ " / "+str(len(self.croisements_bis)))
-            BIN2 = {(i,j) for i in self.wl_alph for j in self.wl_alph if len(i)>self.croisements_bis[c][0] and len(j)>self.croisements_bis[c][1] and i[self.croisements_bis[c][0]]==j[self.croisements_bis[c][1]] }
 
-            P.addConstraint(c[0],c[1],BIN2)
 
         start=time.time()
         solution= P.solve()
