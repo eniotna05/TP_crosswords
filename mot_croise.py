@@ -61,11 +61,11 @@ class CrossWord:
         # Creation du probleme
         P = constraint_programming(var)
         count=0
-        #NEQ = {(i,j) for i in self.word_list for j in self.word_list if i!=j}
-        #for w in self.segments:
-        #    for z in self.segments:
-        #        if w!=z:
-        #            P.addConstraint(w,z,NEQ)
+        NEQ = {(i,j) for i in self.word_list for j in self.word_list if i!=j}
+        for w in self.segments:
+            for z in self.segments:
+                if w!=z:
+                    P.addConstraint(w,z,NEQ)
         # Contraintes binaires: pour forcer les mots à s'intersecter correctement selon les croisements que l'on impose
         for c in self.croisements_to_add:
             count=count+1
