@@ -79,8 +79,8 @@ class CrossWord:
             print(str(count)+ " / "+str(len(self.croisements)))
 
             # SOLUTION 1: (très gourmande en temps)
-            word_list_1 = [p for p in self.word_list if p in var[c[0]] and len(p)>self.croisements[c][0]]
-            word_list_2 = [p for p in self.word_list if p in var[c[1]] and len(p)>self.croisements[c][1]]
+            word_list_1 = [p for p in self.wl_alph if p in var[c[0]] and len(p)>self.croisements[c][0]]
+            word_list_2 = [p for p in self.wl_alph if p in var[c[1]] and len(p)>self.croisements[c][1]]
 
             BIN = {(i,j) for i in word_list_1 for j in word_list_2 if i[self.croisements[c][0]]==j[self.croisements[c][1]]}
             BIN = {(i,j) for i in word_list_1 for j in word_list_2 if i[self.croisements[c][0]]==j[self.croisements[c][1]]}
@@ -88,13 +88,16 @@ class CrossWord:
             P.addConstraint(c[0],c[1],BIN)
 
             count=0
+            print(self.croisements_bis)
         for c in self.croisements_bis:
+            print(c)
+            print(self.croisements_bis[c])
             # SOLUTION 2: l'idée est de mettre une contrainte sur croisements_to_add entre un mot et une lettre
             count=count+1
             print(str(count)+ " / "+str(len(self.croisements_bis)))
-            BIN = {(i,j) for i in self.word_list for j in self.alphabet if len(i)>self.croisements_bis[c][0] and len(j)>self.croisements_bis[c][0] and i[self.croisements_bis[c][0]]==j[self.croisements_bis[c][1]] }
+            BIN2 = {(i,j) for i in self.wl_alph for j in self.wl_alph if len(i)>self.croisements_bis[c][0] and len(j)>self.croisements_bis[c][1] and i[self.croisements_bis[c][0]]==j[self.croisements_bis[c][1]] }
 
-            P.addConstraint(c[0],c[1],BIN)
+            P.addConstraint(c[0],c[1],BIN2)
 
         start=time.time()
         solution= P.solve()
@@ -201,9 +204,7 @@ class CrossWord:
 
         # On doit ajouter aux croisements les "intersections" d'un segment d'une lettre et des segments normaux
         # de la forme (numero intersection, numero segment, position dans l'inter, 0)
-        print(segments)
-        print(croisements_up)
-        print(croisements_up_to_add)
+
         return segments, croisements_up,croisements_up_to_add
 
 
